@@ -13,7 +13,7 @@ PurePursuit::PurePursuit(ros::NodeHandle nh)
     nh_.getParam("pose_topic", pose_topic);
     nh_.getParam("drive_topic", drive_topic);
     nh_.getParam("sim_drive_topic", sim_drive_topic);
-    nh_.getParam("wpt_topic": wpt_topic);
+    nh_.getParam("wpt_topic", wpt_topic);
     nh_.getParam("wpt_viz_topic", wpt_viz_topic);
 
     // files
@@ -103,9 +103,9 @@ void PurePursuit::callback_csv(const geometry_msgs::PoseStamped::ConstPtr& pose_
         }
     }
     if (valid_points.empty()) {
-        race::drive_param zero_msg;
-        zero_msg.velocity = 0.0;
-        zero_msg.angle = 0.0;
+        ackermann_msgs::AckermannDriveStamped zero_msg;
+        zero_msg.drive.speed = 0.0;
+        zero_msg.drive.steering_angle = 0.0;
         drive_pub_.publish(zero_msg);
         return;
     }
@@ -167,7 +167,7 @@ CSVReader::CSVReader(std::string file,
 } // end CSVReader constructor
 
 std::vector< std::array<double,2> > CSVReader::getWpt() {
-    ROS_INFO(file_name.c_str());
+    ROS_INFO("%s", file_name.c_str());
     std::ifstream file(file_name);
     std::vector< std::array<double,2> > waypoints;
     std::string line = "";
@@ -181,6 +181,6 @@ std::vector< std::array<double,2> > CSVReader::getWpt() {
         waypoints.push_back(point);
     }
     file.close();
-    ROS_INFO("waypoints in list, size: %i", waypoints.size());
+    ROS_INFO("waypoints in list, size: %zd", waypoints.size());
     return waypoints;
 }

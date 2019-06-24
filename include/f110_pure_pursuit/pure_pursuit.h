@@ -4,7 +4,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Point.h>
-#include <ackeramnn_msgs/AckermannDriveStamped.h>
+#include <ackermann_msgs/AckermannDriveStamped.h>
 // standard
 #include <math.h>
 #include <stdlib.h>

@@ -1,12 +1,17 @@
 <?xml version="1.0"?>
 <launch>
     <rosparam command="load" file="$(find f110_pure_pursuit)/pure_pursuit_params.yaml" />
-    <include file="$(find racecar)/launch/teleop.launch"/>
-    <!-- Run map server -->
-    <arg name="map_file" default="$(find ninja_turtles_rrt)/maps/levine.yaml"/>
-    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+    <!-- Launch a map from the maps folder-->
+    <arg name="map" default="$(find racecar_simulator)/maps/levine.yaml"/>
+    <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
 
-    <node pkg="tf2_ros" type="static_transform_publisher" name="base_footprint_to_laser" args="0 0 0 0 0 0 base_footprint laser" output="screen"/>
+    <!-- Launch the racecar model -->
+    <include file="$(find racecar_simulator)/launch/racecar_model.launch"/>
+
+    <!-- Begin the simulator with the parameters from params.yaml -->
+    <node pkg="racecar_simulator" name="racecar_simulator" type="simulate" output="screen">
+    <rosparam command="load" file="$(find racecar_simulator)/params.yaml"/>
+    </node>
 
     <!-- Launch pf -->
     <node pkg="rostopic" type="rostopic" name="rostopic" args="pub initialpose geometry_msgs/PoseWithCovarianceStamped '
@@ -30,7 +35,7 @@
         }'" />
 
     <arg name="scan_topic" default="/scan"/>
-    <arg name="odometry_topic" default="/vesc/odom"/>
+    <arg name="odometry_topic" default="/odom"/>
     <arg name="angle_step" default="18"/>
     <arg name="max_particles" default="4000"/>
     <arg name="squash_factor" default="2.2"/>

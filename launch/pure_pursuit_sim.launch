@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+    <node pkg="rviz" type="rviz" args="-d $(find f110_pure_pursuit)/launch/pure_pursuit.rviz" output="screen" />
     <rosparam command="load" file="$(find f110_pure_pursuit)/pure_pursuit_params.yaml" />
     <!-- Launch a map from the maps folder-->
     <arg name="map" default="$(find racecar_simulator)/maps/levine.yaml"/>

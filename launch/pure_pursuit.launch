@@ -79,6 +79,7 @@
 
     <!-- launch pure pursuit -->
     <node pkg="f110_pure_pursuit" name="pure_pursuit" type="f110_pure_pursuit_node" output="screen" />
+    <node pkg="f110_pure_pursuit" name="pure_pursuit_viz" type="f110_pure_pursuit_viz_node" output="screen" />
 
 
 

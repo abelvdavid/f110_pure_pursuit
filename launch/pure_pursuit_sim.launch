@@ -2,6 +2,8 @@
 <launch>
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find f110_pure_pursuit)/launch/pure_pursuit.rviz" output="screen" />
     <rosparam command="load" file="$(find f110_pure_pursuit)/pure_pursuit_params.yaml" />
+    <!-- Listen to messages from joysicks -->
+    <node pkg="joy" name="joy_node" type="joy_node"/>
     <!-- Launch a map from the maps folder-->
     <arg name="map" default="$(find racecar_simulator)/maps/levine.yaml"/>
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
@@ -49,9 +51,9 @@
         <param name="angle_step" value="$(arg angle_step)"/>
         <param name="max_particles" value="$(arg max_particles)"/>
         <param name="max_viz_particles" value="60"/>
-        <!-- <param name="range_method" value="pcddt"/> -->
+        <param name="range_method" value="pcddt"/>
         <!-- use following if on the car -->
-        <param name="range_method" value="rmgpu"/>
+        <!-- <param name="range_method" value="rmgpu"/> -->
         <param name="squash_factor" value="$(arg squash_factor)"/>
         <param name="theta_discretization" value="112"/>
         <!-- max sensor range in meters -->

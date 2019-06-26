@@ -1,7 +1,7 @@
 use_csv: true
 waypoint_file: "/waypoints/levine.csv"
 
-use_sim: false
+use_sim: true
 
 velocity: 3.0
 lookahead_distance: 1.5
@@ -12,7 +12,7 @@ wheelbase: 0.25
 # topics
 pose_topic: "/pf/viz/inferred_pose"
 drive_topic: "/vesc/high_level/ackermann_cmd_mux/input/nav_1"
-sim_drive_topic: "drive"
-wpt_topic: "pure_pursuit_waypoint"
+sim_drive_topic: "/drive"
+wpt_topic: "/pure_pursuit_waypoint"
 wpt_viz_topic: "waypoint_viz"
 wpt_marker_topic: "waypoint_marker"

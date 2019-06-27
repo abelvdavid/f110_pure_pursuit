@@ -1,10 +1,10 @@
-use_csv: true
+use_csv: false
 waypoint_file: "/waypoints/levine.csv"
 
 use_sim: true
 
-velocity: 3.0
-lookahead_distance: 1.5
+velocity: 1.0
+lookahead_distance: 1.2
 steer_p: 1.0
 checking_angle: 1.5708
 wheelbase: 0.25

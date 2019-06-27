@@ -66,7 +66,7 @@ void PurePursuit::callback_pt(const geometry_msgs::PoseStamped::ConstPtr& pose_m
     else msg.drive.speed = velocity;
     msg.drive.steering_angle = steering_angle;
     drive_pub_.publish(msg);
-    ROS_INFO("steering angle: %f", steering_angle);
+    // ROS_INFO("steering angle: %f", steering_angle);
     // publishing waypoints for debugging
     waypt_pub_.publish(current_wpt);
 }

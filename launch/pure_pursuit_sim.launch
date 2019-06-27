@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <launch>
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find f110_pure_pursuit)/launch/pure_pursuit.rviz" output="screen" />
-    <rosparam command="load" file="$(find f110_pure_pursuit)/pure_pursuit_params.yaml" />
     <!-- Listen to messages from joysicks -->
     <node pkg="joy" name="joy_node" type="joy_node"/>
     <!-- Launch a map from the maps folder-->
@@ -86,8 +85,11 @@
     </node>
 
     <!-- launch pure pursuit -->
-    <node pkg="f110_pure_pursuit" name="pure_pursuit" type="f110_pure_pursuit_node" output="screen" />
-    <node pkg="f110_pure_pursuit" name="pure_pursuit_viz" type="f110_pure_pursuit_viz_node" output="screen" />
+    <group ns="pure_pursuit">
+        <rosparam command="load" file="$(find f110_pure_pursuit)/pure_pursuit_params.yaml" />
+        <node pkg="f110_pure_pursuit" name="pure_pursuit" type="f110_pure_pursuit_node" output="screen" />
+        <node pkg="f110_pure_pursuit" name="pure_pursuit_viz" type="f110_pure_pursuit_viz_node" output="screen" />
+    </group>
 
 
 </launch>

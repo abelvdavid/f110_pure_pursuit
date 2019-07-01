@@ -17,5 +17,7 @@ private:
 
     ros::Subscriber wpt_sub;
 
+    std::string scan_frame;
+
     void wpt_callback(const geometry_msgs::Point::ConstPtr& msg);
 };

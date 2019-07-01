@@ -9,12 +9,13 @@ PurePursuit::PurePursuit(ros::NodeHandle nh)
    :nh_(nh) {
     // getting params
     // topics
-    std::string pose_topic, drive_topic, sim_drive_topic, wpt_topic, wpt_viz_topic;
+    std::string pose_topic, drive_topic, sim_drive_topic, wpt_topic, wpt_viz_topic, path_topic;
     nh_.getParam("pose_topic", pose_topic);
     nh_.getParam("drive_topic", drive_topic);
     nh_.getParam("sim_drive_topic", sim_drive_topic);
     nh_.getParam("wpt_topic", wpt_topic);
     nh_.getParam("wpt_viz_topic", wpt_viz_topic);
+    nh_.getParam("traj_topic", path_topic);
 
     // files
     std::string wpt_file;
@@ -23,20 +24,31 @@ PurePursuit::PurePursuit(ros::NodeHandle nh)
     // params
     nh_.getParam("use_csv", use_csv);
     nh_.getParam("use_sim", use_sim);
+    nh_.getParam("use_traj", use_traj);
+    nh_.getParam("use_wpt", use_wpt);
     nh_.getParam("velocity", velocity);
     nh_.getParam("lookahead_distance", lookahead_distance);
     nh_.getParam("checking_angle", checking_angle);
     nh_.getParam("wheelbase", wheelbase);
     nh_.getParam("steer_p", steer_p);
 
+    // frames
+    nh_.getParam("map_frame", map_frame);
+    nh_.getParam("scan_frame", scan_frame);
+
     if (use_csv) {
         std::string pkg_path = ros::package::getPath("f110_pure_pursuit");
         CSVReader csvreader = CSVReader(pkg_path+wpt_file);
         waypoints = csvreader.getWpt();
         pf_sub_ = nh_.subscribe(pose_topic, 10, &PurePursuit::callback_csv, this);
-    } else {
+    } else if (use_wpt) {
         waypt_sub_ = nh_.subscribe(wpt_topic, 10, &PurePursuit::wpt_callback, this);
         pf_sub_ = nh_.subscribe(pose_topic, 10, &PurePursuit::callback_pt, this);
+    } else if (use_traj) {
+        traj_sub_ = nh_.subscribe(path_topic, 10, &PurePursuit::traj_callback, this);
+        pf_sub_ = nh_.subscribe(pose_topic, 10, &PurePursuit::callback_traj, this);
+    } else {
+        ROS_ERROR("Following method must be specified! (use_csv or use_wpt or use_traj).");
     }
 
     if (use_sim) {
@@ -54,6 +66,83 @@ void PurePursuit::wpt_callback(const geometry_msgs::Point::ConstPtr& wpt_msg) {
     current_wpt.x = wpt_msg->x;
     current_wpt.y = wpt_msg->y;
     current_wpt.z = wpt_msg->z;
+}
+
+void PurePursuit::traj_callback(const nav_msgs::Path::ConstPtr& path_msg) {
+    waypoints.clear();
+    std::vector<geometry_msgs::PoseStamped> poses = path_msg->poses;
+    for (int i=0; i<poses.size(); i++) {
+        geometry_msgs::Pose current = poses[i].pose;
+        std::array<double,2> current_point = {{current.position.x, current.position.y}};
+        waypoints.push_back(current_point);
+    }
+}
+
+void PurePursuit::callback_traj(const geometry_msgs::PoseStamped::ConstPtr& pose_msg) {
+    // get current pose
+    double x = pose_msg->pose.position.x;
+    double y = pose_msg->pose.position.y;
+    double z = pose_msg->pose.position.z;
+    double qx = pose_msg->pose.orientation.x;
+    double qy = pose_msg->pose.orientation.y;
+    double qz = pose_msg->pose.orientation.z;
+    double qw = pose_msg->pose.orientation.w;
+    std::array<double,2> pos{ {x, y} };//2d position
+    tf::Quaternion q(qx, qy, qz, qw);
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    // Quaterniond q = Quaterniond(qx, qy, qz, qw);
+    // auto euler = q.toRotationMatrix().eulerAngles(2,1,0);
+    // double theta = euler(0); //yaw
+    double theta = yaw;
+    // ROS_INFO("theta: %f", theta);
+    // get best waypoint
+    std::vector< std::array<double,2> > valid_points;
+    std::vector<double> distances;
+    for (int i=0; i<waypoints.size(); i++) {
+        std::array<double,2> point = waypoints[i];
+        double dist = this->dist(point, pos);
+        bool same_dir = this->dir(pos, point, theta);
+        if (dist < 3.0*lookahead_distance && dist >= lookahead_distance && same_dir) {
+            valid_points.push_back(point);
+            distances.push_back(dist);
+        }
+    }
+    if (valid_points.empty()) {
+        ackermann_msgs::AckermannDriveStamped zero_msg;
+        zero_msg.drive.speed = 0.0;
+        zero_msg.drive.steering_angle = 0.0;
+        drive_pub_.publish(zero_msg);
+        return;
+    }
+    auto min_iter = std::min_element(distances.begin(), distances.end());
+    int min_ind = min_iter - distances.begin();
+    std::array<double,2> best_point = valid_points[min_ind];
+    // transform goal point into car frame
+    geometry_msgs::PointStamped p;
+    geometry_msgs::PointStamped best_point_car;
+    best_point_car.header.frame_id = scan_frame;
+    p.header.frame_id = map_frame;
+    p.point.x = best_point[0];
+    p.point.y = best_point[1];
+    p.point.z = 0.0;
+    // auto t = listener.getLatestCommonTime("/laser", "/map", ros::Time::now(), "lol?");
+    listener.waitForTransform(scan_frame, map_frame, ros::Time::now(), ros::Duration(0.1));
+    listener.transformPoint(scan_frame, p, best_point_car);
+    double radius = 1/(2.0*best_point_car.point.y/pow(lookahead_distance, 2));
+    double steering_angle = steer_p * atan(wheelbase/radius);
+    if (steering_angle < -0.4189) steering_angle = -0.4189;
+    if (steering_angle > 0.4189) steering_angle = 0.4189;
+    ackermann_msgs::AckermannDriveStamped msg;
+    if (std::abs(steering_angle) > 0.35) msg.drive.speed = velocity - 0.4;
+    else msg.drive.speed = velocity;
+    msg.drive.steering_angle = steering_angle;
+    drive_pub_.publish(msg);
+    // publishing waypoints for debugging
+    geometry_msgs::Point waypoint_car;
+    waypoint_car = best_point_car.point;
+    waypt_pub_.publish(waypoint_car);
 }
 
 void PurePursuit::callback_pt(const geometry_msgs::PoseStamped::ConstPtr& pose_msg) {
@@ -115,14 +204,14 @@ void PurePursuit::callback_csv(const geometry_msgs::PoseStamped::ConstPtr& pose_
     // transform goal point into car frame
     geometry_msgs::PointStamped p;
     geometry_msgs::PointStamped best_point_car;
-    best_point_car.header.frame_id = "/laser";
-    p.header.frame_id = "/map";
+    best_point_car.header.frame_id = scan_frame;
+    p.header.frame_id = map_frame;
     p.point.x = best_point[0];
     p.point.y = best_point[1];
     p.point.z = 0.0;
     // auto t = listener.getLatestCommonTime("/laser", "/map", ros::Time::now(), "lol?");
-    listener.waitForTransform("/laser", "/map", ros::Time::now(), ros::Duration(0.1));
-    listener.transformPoint("/laser", p, best_point_car);
+    listener.waitForTransform(scan_frame, map_frame, ros::Time::now(), ros::Duration(0.1));
+    listener.transformPoint(scan_frame, p, best_point_car);
     double radius = 1/(2.0*best_point_car.point.y/pow(lookahead_distance, 2));
     double steering_angle = steer_p * atan(wheelbase/radius);
     if (steering_angle < -0.4189) steering_angle = -0.4189;

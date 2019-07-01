@@ -1,25 +1,22 @@
-use_csv: false
+use_csv: true
 waypoint_file: "/waypoints/levine.csv"
-use_wpt: false
-use_traj: true
-traj_topic: "/rrt/path"
 
 use_sim: true
 
 velocity: 2.0
-lookahead_distance: 0.8
+lookahead_distance: 1.2
 steer_p: 1.0
 checking_angle: 1.5708
 wheelbase: 0.25
 
 # topics
-pose_topic: "/pf/viz/inferred_pose"
+pose_topic: "/op_fake_pf"
 drive_topic: "/vesc/high_level/ackermann_cmd_mux/input/nav_1"
-sim_drive_topic: "/drive"
-wpt_topic: "/pure_pursuit_waypoint"
+sim_drive_topic: "/op_drive"
+wpt_topic: "/op_pure_pursuit_waypoint"
 wpt_viz_topic: "waypoint_viz"
 wpt_marker_topic: "waypoint_marker"
 
 # frames
 map_frame: "/map"
-scan_frame: "laser"
+scan_frame: "op_laser"

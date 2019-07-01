@@ -4,6 +4,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Point.h>
+#include <nav_msgs/Path.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 // standard
 #include <math.h>
@@ -34,6 +35,7 @@ private:
     // subscribers
     ros::Subscriber pf_sub_;
     ros::Subscriber waypt_sub_;
+    ros::Subscriber traj_sub_;
     
     // publishers
     ros::Publisher drive_pub_;
@@ -45,13 +47,16 @@ private:
     // params
     geometry_msgs::Point current_wpt;
     double velocity, lookahead_distance, checking_angle, wheelbase, steer_p;
-    bool use_csv, use_sim;
+    bool use_csv, use_sim, use_traj, use_wpt;
+    std::string map_frame, scan_frame;
     std::vector< std::array<double,2> > waypoints;
 
     // methods
     void wpt_callback(const geometry_msgs::Point::ConstPtr& wpt_msg);
+    void traj_callback(const nav_msgs::Path::ConstPtr& path_msg);
     void callback_csv(const geometry_msgs::PoseStamped::ConstPtr& pose_msg);
     void callback_pt(const geometry_msgs::PoseStamped::ConstPtr& pose_msg);
+    void callback_traj(const geometry_msgs::PoseStamped::ConstPtr& pose_msg);
     double dist(std::array<double,2> p1, std::array<double,2> p2);
     bool dir(std::array<double,2> pos, std::array<double,2> wpt, double theta);
 };

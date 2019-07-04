@@ -3,7 +3,7 @@ waypoint_file: "/waypoints/levine.csv"
 
 use_sim: true
 
-velocity: 2.0
+velocity: 1.5
 lookahead_distance: 1.2
 steer_p: 1.0
 checking_angle: 1.5708

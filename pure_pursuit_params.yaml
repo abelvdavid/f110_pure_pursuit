@@ -1,7 +1,7 @@
-use_csv: false
+use_csv: true
 waypoint_file: "/waypoints/levine.csv"
 use_wpt: false
-use_traj: true
+use_traj: false
 traj_topic: "/rrt/path"
 
 use_sim: true

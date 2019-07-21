@@ -13,9 +13,9 @@ checking_angle: 1.5708
 wheelbase: 0.25
 
 # topics
-pose_topic: "/pf/viz/inferred_pose"
+pose_topic: "/op_pose"
 drive_topic: "/vesc/high_level/ackermann_cmd_mux/input/nav_1"
-sim_drive_topic: "/drive"
+sim_drive_topic: "/op_drive"
 wpt_topic: "/pure_pursuit_waypoint"
 wpt_viz_topic: "waypoint_viz"
 wpt_marker_topic: "waypoint_marker"

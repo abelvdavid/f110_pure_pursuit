@@ -11,7 +11,7 @@
     <include file="$(find racecar_simulator)/launch/racecar_model.launch"/>
 
     <!-- Begin the simulator with the parameters from params.yaml -->
-    <node pkg="racecar_simulator" name="racecar_simulator" type="simulate" output="screen">
+    <node pkg="racecar_simulator" name="racecar_simulator" type="simulator" output="screen">
     <rosparam command="load" file="$(find racecar_simulator)/params.yaml"/>
     </node>
 

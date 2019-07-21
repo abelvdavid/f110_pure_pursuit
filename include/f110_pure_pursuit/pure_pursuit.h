@@ -19,8 +19,8 @@
 #include <boost/algorithm/string.hpp>
 
 // Eigen
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
+#include <eigen3/Dense>
+#include <eigen3/Geometry>
 using namespace Eigen;
 
 class PurePursuit {
